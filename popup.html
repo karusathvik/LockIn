@@ -1,12 +1,50 @@
 <!DOCTYPE html>
 <html>
-<head><title>Locked In</title></head>
+<head>
+  <title>Locked In</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 15px;
+      width: 250px;
+      background-color: #f2f2f2;
+      color: #333;
+    }
+
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    label {
+      font-size: 16px;
+    }
+
+    #settingsLink {
+      display: inline-block;
+      text-decoration: none;
+      color: white;
+      background-color: #4CAF50;
+      padding: 8px 14px;
+      border-radius: 5px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    #settingsLink:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
 <body>
-  <div>
-    <label><input type="checkbox" id="toggleBlock"> Block this site</label>
-    <br>
-    <a href="settings.html" target="_blank">Settings</a>
+  <div class="toggle-container">
+    <input type="checkbox" id="toggleBlock">
+    <label for="toggleBlock">Block this site</label>
   </div>
+  <a href="settings.html" id="settingsLink" target="_blank">Open Settings</a>
+
   <script src="popup.js"></script>
 </body>
 </html>

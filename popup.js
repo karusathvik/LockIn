@@ -55,13 +55,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (blocked.includes(domain) || keywords.length === 0) return;
 
-        const promptText = `Reply only with **yes** or **no** in lowercase. Do not explain. Is this page primarily about any of these [${keywords.join(", ")}], here is the page iformation below:\n` 
+        const promptText = `I will soon give you the prompt but remeber reply only with **yes** or **no** in lowercase and do not explain. Does the following page fall under one of these categories [${keywords.join(", ")}], here is the page iformation below:\n` 
         +
           `Title: ${metadata.title}\n` +
           `OG Title: ${metadata.ogTitle}\n` +
           `Meta Description: ${metadata.metaDescription}\n` +
           `OG Description: ${metadata.ogDescription}\n` +
-          `URL: ${metadata.url}`;
+          `URL: ${metadata.url}\n` + 'Reply only with yes or no in lowercase. Do not reply with anything else so again reply with yes or no.\n';
         
         console.log(promptText); 
         const session = await LanguageModel.create();
@@ -71,6 +71,9 @@ document.addEventListener("DOMContentLoaded", () => {
           blocked.push(domain);
           chrome.storage.local.set({ blocked });
         }
+
+
+        
       });
     });
   });
