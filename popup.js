@@ -43,11 +43,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }, async (results) => {
       const metadata = results[0].result;
       const domain = new URL(metadata.url).hostname.replace(/^www\./, "");
-      const SAFE_DOMAINS = ["google.com", "bing.com", "duckduckgo.com", "yahoo.com", "https://chatgpt.com"];
+      const SAFE_DOMAINS = ["google.com", "bing.com", "duckduckgo.com", "yahoo.com", "openai.com", "chat.openai.com","chatgpt.com"];
 
-      if (SAFE_DOMAINS.includes(domain)) {
-        return; // Never block search engines
+      if (SAFE_DOMAINS.some(safe => domain.endsWith(safe))) {
+        return;
       }
+      
 
       chrome.storage.local.get(["keywords", "blocked"], async (res) => {
         const keywords = res.keywords || [];
@@ -55,13 +56,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (blocked.includes(domain) || keywords.length === 0) return;
 
-        const promptText = `I will soon give you the prompt but remeber reply only with **yes** or **no** in lowercase and do not explain. Does the following page fall under one of these categories [${keywords.join(", ")}], here is the page iformation below:\n` 
+        const promptText = `I will soon give you the prompt but remeber reply only with **yes** or **no** in lowercase and do not explain. Does the following page fall under one of these categories [${keywords.join(", ")}], here is the page iformation below: ` 
         +
-          `Title: ${metadata.title}\n` +
-          `OG Title: ${metadata.ogTitle}\n` +
-          `Meta Description: ${metadata.metaDescription}\n` +
-          `OG Description: ${metadata.ogDescription}\n` +
-          `URL: ${metadata.url}\n` + 'Reply only with yes or no in lowercase. Do not reply with anything else so again reply with yes or no.\n';
+          `Title: ${metadata.title}` +
+          `OG Title: ${metadata.ogTitle}` +
+          `Meta Description: ${metadata.metaDescription}` +
+          `OG Description: ${metadata.ogDescription}` +
+          `URL: ${metadata.url} ` + ' Double check to make sure this website fits into those above mentioned categories and if it does, state yes else no\n';
         
         console.log(promptText); 
         const session = await LanguageModel.create();

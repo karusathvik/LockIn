@@ -32,6 +32,23 @@ function renderDomains(domains) {
     });
   }
   
+  function renderAllowed(allowed) {
+    const list = document.getElementById("allowList");
+    list.innerHTML = "";
+    allowed.forEach(domain => {
+      const li = document.createElement("li");
+      li.textContent = domain;
+      const del = document.createElement("button");
+      del.textContent = "Remove";
+      del.onclick = () => {
+        const updated = allowed.filter(a => a !== domain);
+        chrome.storage.local.set({ allowed: updated });
+      };
+      li.appendChild(del);
+      list.appendChild(li);
+    });
+  }
+  
   document.addEventListener("DOMContentLoaded", () => {
     const input = document.getElementById("domainInput");
     const addBtn = document.getElementById("addDomain");
@@ -55,13 +72,6 @@ function renderDomains(domains) {
       }
     };
   
-    chrome.storage.onChanged.addListener((changes, area) => {
-      if (area === "local") {
-        if (changes.blocked) renderDomains(changes.blocked.newValue);
-        if (changes.keywords) renderKeywords(changes.keywords.newValue);
-      }
-    });
-  
     const keywordInput = document.getElementById("keywordInput");
     const addKeywordBtn = document.getElementById("addKeyword");
   
@@ -83,4 +93,34 @@ function renderDomains(domains) {
         });
       }
     };
+  
+    const allowInput = document.getElementById("allowInput");
+    const addAllowBtn = document.getElementById("addAllow");
+  
+    chrome.storage.local.get(["allowed"], (result) => {
+      const allowed = result.allowed || [];
+      renderAllowed(allowed);
+    });
+  
+    addAllowBtn.onclick = () => {
+      const domain = allowInput.value.trim().replace(/^www\./, '').toLowerCase();
+      if (domain) {
+        chrome.storage.local.get(["allowed"], (result) => {
+          const allowed = result.allowed || [];
+          if (!allowed.includes(domain)) {
+            allowed.push(domain);
+            chrome.storage.local.set({ allowed });
+            allowInput.value = "";
+          }
+        });
+      }
+    };
+  
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === "local") {
+        if (changes.blocked) renderDomains(changes.blocked.newValue);
+        if (changes.keywords) renderKeywords(changes.keywords.newValue);
+        if (changes.allowed) renderAllowed(changes.allowed.newValue);
+      }
+    });
   });
