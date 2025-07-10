@@ -3,7 +3,7 @@
   "name": "Locked In",
   "version": "1.0",
   "description": "Block distracting websites.",
-  "permissions": ["storage", "declarativeNetRequest"],
+  "permissions": ["storage", "declarativeNetRequest", "scripting", "activeTab"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"

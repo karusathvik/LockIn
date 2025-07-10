@@ -5,7 +5,8 @@ function getDomain(url) {
 
 document.addEventListener("DOMContentLoaded", () => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const currentDomain = getDomain(tabs[0].url);
+    const currentTab = tabs[0];
+    const currentDomain = getDomain(currentTab.url);
     const toggle = document.getElementById("toggleBlock");
 
     chrome.storage.local.get(["blocked"], (result) => {
@@ -24,6 +25,52 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         chrome.storage.local.set({ blocked });
+      });
+    });
+
+    // Inject script to get metadata and analyze page
+    chrome.scripting.executeScript({
+      target: { tabId: currentTab.id },
+      func: () => {
+        const title = document.title;
+        const metaDescription = document.querySelector("meta[name='description']")?.content || "";
+        const ogDescription = document.querySelector("meta[property='og:description']")?.content || "";
+        const ogTitle = document.querySelector("meta[property='og:title']")?.content || "";
+        const url = window.location.href;
+
+        return { title, metaDescription, ogDescription, ogTitle, url };
+      }
+    }, async (results) => {
+      const metadata = results[0].result;
+      const domain = new URL(metadata.url).hostname.replace(/^www\./, "");
+      const SAFE_DOMAINS = ["google.com", "bing.com", "duckduckgo.com", "yahoo.com", "https://chatgpt.com"];
+
+      if (SAFE_DOMAINS.includes(domain)) {
+        return; // Never block search engines
+      }
+
+      chrome.storage.local.get(["keywords", "blocked"], async (res) => {
+        const keywords = res.keywords || [];
+        const blocked = res.blocked || [];
+
+        if (blocked.includes(domain) || keywords.length === 0) return;
+
+        const promptText = `Reply only with **yes** or **no** in lowercase. Do not explain. Is this page primarily about any of these [${keywords.join(", ")}], here is the page iformation below:\n` 
+        +
+          `Title: ${metadata.title}\n` +
+          `OG Title: ${metadata.ogTitle}\n` +
+          `Meta Description: ${metadata.metaDescription}\n` +
+          `OG Description: ${metadata.ogDescription}\n` +
+          `URL: ${metadata.url}`;
+        
+        console.log(promptText); 
+        const session = await LanguageModel.create();
+        const result = await session.prompt(promptText);
+        console.log("Prompt API response:", result);
+        if (result == "yes" ) {
+          blocked.push(domain);
+          chrome.storage.local.set({ blocked });
+        }
       });
     });
   });
