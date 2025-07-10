@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (result == "yes" ) {
           blocked.push(domain);
           chrome.storage.local.set({ blocked });
+          chrome.tabs.reload(currentTab.id); 
         }
 
 
