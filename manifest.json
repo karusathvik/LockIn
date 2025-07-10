@@ -1,10 +1,23 @@
 {
-  "name": "Hello Extensions of the world",
-  "description": "Base Level Extension",
-  "version": "1.0",
   "manifest_version": 3,
+  "name": "Locked In",
+  "version": "1.0",
+  "description": "Block distracting websites.",
+  "permissions": ["storage", "declarativeNetRequest"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
-    "default_popup": "hello.html",
-    "default_icon": "hello_extensions.png"
+    "default_popup": "popup.html"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "dynamic",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
   }
 }
