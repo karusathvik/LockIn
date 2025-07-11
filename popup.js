@@ -32,50 +32,57 @@ document.addEventListener("DOMContentLoaded", () => {
     chrome.scripting.executeScript({
       target: { tabId: currentTab.id },
       func: () => {
-        const title = document.title;
-        const metaDescription = document.querySelector("meta[name='description']")?.content || "";
-        const ogDescription = document.querySelector("meta[property='og:description']")?.content || "";
-        const ogTitle = document.querySelector("meta[property='og:title']")?.content || "";
-        const url = window.location.href;
+        try {
+          const title = document.title;
+          const metaDescription = document.querySelector("meta[name='description']")?.content || "";
+          const ogDescription = document.querySelector("meta[property='og:description']")?.content || "";
+          const ogTitle = document.querySelector("meta[property='og:title']")?.content || "";
+          const url = window.location.href;
 
-        return { title, metaDescription, ogDescription, ogTitle, url };
+          return { title, metaDescription, ogDescription, ogTitle, url };
+        } catch (e) {
+          return { error: true };
+        }
       }
     }, async (results) => {
       const metadata = results[0].result;
-      const domain = new URL(metadata.url).hostname.replace(/^www\./, "");
-      const SAFE_DOMAINS = ["google.com", "bing.com", "duckduckgo.com", "yahoo.com", "openai.com", "chat.openai.com","chatgpt.com"];
-
-      if (SAFE_DOMAINS.some(safe => domain.endsWith(safe))) {
+      if (!metadata || metadata.error) {
+        console.warn("Could not fetch metadata");
         return;
       }
-      
 
-      chrome.storage.local.get(["keywords", "blocked"], async (res) => {
+      const domain = new URL(metadata.url).hostname.replace(/^www\./, "");
+      const SAFE_DOMAINS = ["google.com", "bing.com", "duckduckgo.com", "yahoo.com", "chatgpt.com"];
+
+      if (SAFE_DOMAINS.includes(domain)) return;
+
+      chrome.storage.local.get(["keywords", "blocked", "allowed"], async (res) => {
         const keywords = res.keywords || [];
-        const blocked = res.blocked || [];
+        let blocked = res.blocked || [];
+        const allowed = res.allowed || [];
 
-        if (blocked.includes(domain) || keywords.length === 0) return;
+        if (blocked.includes(domain) || allowed.some(allow => domain.endsWith(allow))) return;
+        if (keywords.length === 0) return;
 
-        const promptText = `I will soon give you the prompt but remeber reply only with **yes** or **no** in lowercase and do not explain. Does the following page fall under one of these categories [${keywords.join(", ")}], here is the page iformation below: ` 
-        +
+        const promptText = `Does the following website fall under one of these categories [${keywords.join(", ")}]:` +
           `Title: ${metadata.title}` +
-          `OG Title: ${metadata.ogTitle}` +
-          `Meta Description: ${metadata.metaDescription}` +
-          `OG Description: ${metadata.ogDescription}` +
-          `URL: ${metadata.url} ` + ' Double check to make sure this website fits into those above mentioned categories and if it does, state yes else no\n';
-        
-        console.log(promptText); 
+          `which is about: ${metadata.metaDescription}` +
+          `and its url being: ${metadata.url}. Reply only with yes or no and carefully think this website along with its information is about any of the mentioned categories. Remember only a yes or no reply.`;
+
         const session = await LanguageModel.create();
         const result = await session.prompt(promptText);
         console.log("Prompt API response:", result);
-        if (result == "yes" ) {
-          blocked.push(domain);
-          chrome.storage.local.set({ blocked });
-          chrome.tabs.reload(currentTab.id); 
+
+        if (result.trim().toLowerCase() === "yes") {
+          if (!blocked.includes(domain)) {
+            blocked.push(domain);
+            chrome.storage.local.set({ blocked });
+          } else {
+            // Still trigger update in UI
+            chrome.storage.local.set({ blocked });
+          }
+          chrome.tabs.reload(currentTab.id);
         }
-
-
-        
       });
     });
   });

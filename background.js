@@ -1,8 +1,8 @@
 function updateRules(domains, allowed) {
   const rules = domains
-    .filter(domain => !allowed.includes(domain))
+    .filter(domain => !allowed.some(allow => domain.endsWith(allow)))
     .map((domain, index) => ({
-      id: index + 1,
+      id: 1000 + index, // Use high, unique IDs
       priority: 1,
       action: {
         type: "redirect",
@@ -11,14 +11,17 @@ function updateRules(domains, allowed) {
         }
       },
       condition: {
-        urlFilter: domain,
+        urlFilter: `||${domain}^`,
         resourceTypes: ["main_frame"]
       }
     }));
 
-  chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: rules.map(r => r.id),
-    addRules: rules
+  chrome.declarativeNetRequest.getDynamicRules(existing => {
+    const oldIds = existing.map(rule => rule.id);
+    chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: oldIds,
+      addRules: rules
+    });
   });
 }
 
