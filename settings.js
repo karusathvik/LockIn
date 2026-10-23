@@ -1,10 +1,17 @@
 async function send(message) {
-  const response = await chrome.runtime.sendMessage(message);
+  let response;
+  try {
+    response = await chrome.runtime.sendMessage(message);
+  } catch (error) {
+    if (/Receiving end does not exist|Could not establish connection|Extension context invalidated/i.test(error.message)) throw new Error("Reload Locked In at chrome://extensions, then reopen settings and try again. If it still fails, check the extension’s Errors panel.");
+    throw error;
+  }
+  if (!response) throw new Error("Reload Locked In at chrome://extensions, then reopen settings and try again.");
   if (response?.error) throw new Error(response.error);
 }
 
 async function render() {
-  const { blocked = [], focusUntil = 0 } = await chrome.storage.local.get("blocked");
+  const { blocked = [], focusUntil = 0 } = await chrome.storage.local.get(["blocked", "focusUntil"]);
   const locked = focusUntil > Date.now();
   document.getElementById("startFocus").disabled = locked;
   document.getElementById("focusStatus").textContent = locked ? "Locked until " + new Date(focusUntil).toLocaleTimeString() : "No active focus session.";

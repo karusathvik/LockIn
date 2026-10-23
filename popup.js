@@ -12,10 +12,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       button.disabled = true;
       try {
         const result = await chrome.runtime.sendMessage({ type: "add", domain });
+        if (!result) throw new Error("Reload Locked In at chrome://extensions, then reopen this popup and try again.");
         if (result?.error) throw new Error(result.error);
         status.textContent = "Website blocked.";
       } catch (error) {
-        status.textContent = error.message;
+        status.textContent = /Receiving end does not exist|Could not establish connection|Extension context invalidated/i.test(error.message) ? "Reload Locked In at chrome://extensions, then reopen this popup and try again. If it still fails, check the extension’s Errors panel." : error.message;
         button.disabled = false;
       }
     };
