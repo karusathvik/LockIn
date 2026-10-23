@@ -40,7 +40,7 @@ async function render() {
   domainsSignature = nextDomainsSignature;
   const list = document.getElementById("domains");
   list.replaceChildren();
-  for (const domain of Domains.clean(blocked)) {
+  for (const domain of Domains.clean(blocked).filter(domain => !Domains.isPermanent(domain))) {
     const item = document.createElement("li");
     const name = document.createElement("span");
     name.textContent = domain;
@@ -86,6 +86,17 @@ function renderProgress(progress) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  const permanentList = document.getElementById("permanentDomains");
+  for (const domain of Domains.permanent) {
+    const item = document.createElement("li");
+    const name = document.createElement("strong");
+    name.textContent = domain;
+    const badge = document.createElement("span");
+    badge.className = "permanent-badge";
+    badge.textContent = "PERMANENTLY SEALED";
+    item.append(name, badge);
+    permanentList.append(item);
+  }
   const reason = document.getElementById("reason");
   const updateReasonCount = () => {
     const length = reason.value.trim().length;

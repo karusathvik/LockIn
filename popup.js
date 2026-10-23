@@ -6,8 +6,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const domain = Domains.normalizeDomain(tab?.url);
     document.getElementById("site").textContent = domain;
     const { blocked = [] } = await chrome.storage.local.get("blocked");
-    button.disabled = Domains.clean(blocked).some(item => Domains.matches(domain, item));
-    if (button.disabled) status.textContent = "This website is already blocked.";
+    button.disabled = Domains.effective(blocked).some(item => Domains.matches(domain, item));
+    if (button.disabled) status.textContent = Domains.isPermanent(domain) ? "Permanently blocked. Focus sessions and early unlocking cannot open this website." : "This website is already blocked.";
     button.onclick = async () => {
       button.disabled = true;
       try {

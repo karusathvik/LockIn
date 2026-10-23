@@ -1,4 +1,5 @@
 (function (root) {
+  const permanent = Object.freeze(["instagram.com", "linkedin.com", "facebook.com"]);
   function normalizeDomain(input) {
     const value = String(input || "").trim();
     const url = new URL(value.includes("://") ? value : "https://" + value);
@@ -15,5 +16,11 @@
       try { return [normalizeDomain(value)]; } catch { return []; }
     }))].sort();
   }
-  root.Domains = { normalizeDomain, matches, clean };
+  function isPermanent(host) {
+    return permanent.some(domain => matches(host, domain));
+  }
+  function effective(domains) {
+    return clean([...permanent, ...clean(domains).filter(domain => !isPermanent(domain))]);
+  }
+  root.Domains = Object.freeze({ normalizeDomain, matches, clean, permanent, isPermanent, effective });
 })(globalThis);

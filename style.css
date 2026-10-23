@@ -135,3 +135,9 @@ body.popup { background: linear-gradient(90deg, #0b0e1df5, #111023ce), url("asse
   .shadow-encounter .focus-reminder { margin: 5vh auto; padding: 24px; background: #111426e8; }
   .shadow-encounter::before { background-position: 65% center; }
 }
+
+.permanent-card { border: 1px solid #8363b4; border-left: 3px solid #d0a7ff; background: linear-gradient(120deg, #241b3b, #101426); }
+.permanent-card li strong { font-size: 14px; overflow-wrap: anywhere; }
+.permanent-badge { border: 1px solid #695188; padding: 6px 9px; border-radius: 4px; color: #ddc2ff; font-size: 9px; letter-spacing: .08em; background: #b083e410; white-space: nowrap; }
+.permanent-note { font-size: 12px; }
+@media (max-width: 420px) { .permanent-card li { align-items: start; flex-direction: column; gap: 8px; } }

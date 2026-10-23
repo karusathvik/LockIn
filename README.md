@@ -39,3 +39,9 @@ Version 1.3 adds an original Solo Leveling-inspired shadow-hunter illustration, 
 The dashboard keeps the heatmap first and website additions beside session controls. Active sessions show a live countdown and elapsed-time bar. The theme uses static art and respects narrow layouts without animation.
 
 Import `focus-phrases.json` from this folder for an optional set of original training-arc reminders. Goal and next-step reminders are practical prompts rather than a guarantee of improved productivity; no live content API is used.
+
+## Permanent career-focus blocks
+
+Version 1.4 permanently blocks `instagram.com`, `linkedin.com`, and `facebook.com`, including their subdomains. This list is fixed in `domains.js`, not stored as a removable preference. Blocks apply to existing tabs, new navigation, and client-side navigation without requiring a focus session. Early unlocking, session expiry, restarting Chrome, and removing ordinary blocks do not remove permanent rules. No settings control or message can remove these entries.
+
+You can still add other websites at any time. Permanent blocks appear separately with no remove controls. Chrome still allows disabling or uninstalling extensions, and someone with filesystem access can edit extension code. This is an extension-level commitment, not an operating-system restriction.

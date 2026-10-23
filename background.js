@@ -6,14 +6,14 @@ async function enforceTab(tabId, url) {
   let host;
   try { host = Domains.normalizeDomain(url); } catch { return; }
   const { blocked = [] } = await chrome.storage.local.get("blocked");
-  if (Domains.clean(blocked).some(domain => Domains.matches(host, domain))) {
+  if (Domains.effective(blocked).some(domain => Domains.matches(host, domain))) {
     await chrome.tabs.update(tabId, { url: chrome.runtime.getURL("blocked.html") }).catch(() => {});
   }
 }
 
 async function refreshRules() {
   const { blocked = [] } = await chrome.storage.local.get("blocked");
-  const domains = Domains.clean(blocked);
+  const domains = Domains.effective(blocked);
   const existing = await chrome.declarativeNetRequest.getDynamicRules();
   await chrome.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: existing.map(rule => rule.id),
@@ -91,7 +91,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       const minutes = Number(message.minutes);
       if (![15, 30, 60, 120].includes(minutes)) throw new Error("Choose a supported session duration.");
       const { blocked = [] } = await chrome.storage.local.get("blocked");
-      if (!Domains.clean(blocked).length) throw new Error("Block at least one website first.");
+      if (!Domains.effective(blocked).length) throw new Error("Block at least one website first.");
       const started = new Date();
       const day = [started.getFullYear(), String(started.getMonth() + 1).padStart(2, "0"), String(started.getDate()).padStart(2, "0")].join("-");
       await chrome.storage.local.set({ focusUntil: started.getTime() + minutes * 60000, focusSession: { day, minutes }, unlockRequest: null });
@@ -99,6 +99,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
     }
     if (message.type === "remove" && focusUntil > Date.now()) throw new Error("Blocked websites cannot be removed until your focus session ends.");
     const domain = Domains.normalizeDomain(message.domain);
+    if (Domains.isPermanent(domain)) throw new Error("This website is permanently blocked. Permanent blocks cannot be changed or unlocked in LockIn.");
     const { blocked = [] } = await chrome.storage.local.get("blocked");
     await chrome.storage.local.set({
       blocked: message.type === "add" ? Domains.clean([...blocked, domain]) : Domains.clean(blocked).filter(item => item !== domain)
