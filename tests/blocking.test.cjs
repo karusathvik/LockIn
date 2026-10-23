@@ -43,7 +43,10 @@ test("normalize pasted URLs and match only hostname boundaries", async () => {
 test("rules and existing tabs enforce Monkeytype and Gmail despite legacy allow entries", async () => {
   const app = setup({ blocked: ["https://www.monkeytype.com/test", "mail.google.com"], allowed: ["google.com"] });
   await app.idle();
-  assert.equal(app.rules().length, 2);
+  assert.equal(app.rules().length, app.context.Domains.permanent.length + 2);
+  const hosts = app.rules().flatMap(rule => Array.from(rule.condition.requestDomains));
+  assert.ok(hosts.includes("monkeytype.com"));
+  assert.ok(hosts.includes("mail.google.com"));
   assert.deepEqual(app.redirects.map(tab => tab.id).sort(), [1, 2]);
   assert.equal(app.rules()[0].action.redirect.extensionPath, "/blocked.html");
   assert.equal(app.rules()[0].condition.resourceTypes.includes("sub_frame"), true);
@@ -70,7 +73,7 @@ test("focus sessions reject removal and cannot be shortened, but permit addition
 test("concurrent adds are serialized and invalid durations rejected", async () => {
   const app = setup();
   await app.idle();
-  assert.match((await app.send({ type: "focus", minutes: 30 })).error, /at least one/);
+  assert.equal(app.rules().length, app.context.Domains.permanent.length);
   await Promise.all(["monkeytype.com", "mail.google.com"].map(domain => app.send({ type: "add", domain })));
   assert.equal(app.data.blocked.length, 2);
   assert.match((await app.send({ type: "focus", minutes: -1 })).error, /supported/);
