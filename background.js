@@ -53,8 +53,19 @@ queueRefresh();
 
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   if (sender.id !== chrome.runtime.id || !sender.url?.startsWith(chrome.runtime.getURL(""))) return;
-  if (!["add", "remove"].includes(message.type)) return;
+  if (!["add", "remove", "focus"].includes(message.type)) return;
   pending = pending.catch(() => {}).then(async () => {
+    const { focusUntil = 0 } = await chrome.storage.local.get("focusUntil");
+    if (message.type === "focus") {
+      if (focusUntil > Date.now()) throw new Error("Your focus session is already running.");
+      const minutes = Number(message.minutes);
+      if (![15, 30, 60, 120].includes(minutes)) throw new Error("Choose a supported session duration.");
+      const { blocked = [] } = await chrome.storage.local.get("blocked");
+      if (!Domains.clean(blocked).length) throw new Error("Block at least one website first.");
+      await chrome.storage.local.set({ focusUntil: Date.now() + minutes * 60000 });
+      return;
+    }
+    if (message.type === "remove" && focusUntil > Date.now()) throw new Error("Blocked websites cannot be removed until your focus session ends.");
     const domain = Domains.normalizeDomain(message.domain);
     const { blocked = [] } = await chrome.storage.local.get("blocked");
     await chrome.storage.local.set({

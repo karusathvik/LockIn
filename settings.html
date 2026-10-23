@@ -7,7 +7,9 @@
 <p>Domains include all subdomains. Paste a full URL or a domain, such as monkeytype.com, mail.google.com, or outlook.live.com.</p>
 <form id="addForm"><label for="domain">Website</label><input id="domain" required placeholder="monkeytype.com"><button>Add website</button></form>
 <p id="status" role="status"></p>
-<ul id="domains"></ul>
+<section><h2>Focus session</h2><p>During a session you can add websites, but cannot remove blocks. Sessions continue across browser restarts. Blocks remain after the timer ends until you remove them.</p>
+<form id="focusForm"><label for="minutes">Duration</label><select id="minutes"><option value="15">15 minutes</option><option value="30" selected>30 minutes</option><option value="60">60 minutes</option><option value="120">120 minutes</option></select><button id="startFocus">Start focus session</button></form>
+<p id="focusStatus" role="status"></p></section><ul id="domains"></ul>
 </main>
 <script src="domains.js"></script><script src="settings.js"></script>
 </body>
