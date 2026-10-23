@@ -27,8 +27,16 @@ async function refreshRules() {
   await Promise.all((await chrome.tabs.query({})).map(tab => enforceTab(tab.id, tab.pendingUrl || tab.url)));
 }
 
+async function settleSession() {
+  const { focusUntil = 0, focusSession = null, progress = {} } = await chrome.storage.local.get(["focusUntil", "focusSession", "progress"]);
+  if (!focusSession || focusUntil > Date.now()) return;
+  const day = progress[focusSession.day] || { sessions: 0, minutes: 0 };
+  progress[focusSession.day] = { sessions: day.sessions + 1, minutes: day.minutes + focusSession.minutes };
+  await chrome.storage.local.set({ progress, focusSession: null, focusUntil: 0, unlockRequest: null });
+}
+
 function queueRefresh() {
-  pending = pending.catch(() => {}).then(refreshRules);
+  pending = pending.catch(() => {}).then(async () => { await settleSession(); await refreshRules(); });
   pending.catch(console.error);
   return pending;
 }
@@ -53,16 +61,40 @@ queueRefresh();
 
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   if (sender.id !== chrome.runtime.id || !sender.url?.startsWith(chrome.runtime.getURL(""))) return;
-  if (!["add", "remove", "focus"].includes(message.type)) return;
+  if (!["add", "remove", "focus", "status", "requestUnlock", "cancelUnlock", "confirmUnlock"].includes(message.type)) return;
   pending = pending.catch(() => {}).then(async () => {
+    await settleSession();
     const { focusUntil = 0 } = await chrome.storage.local.get("focusUntil");
+    if (message.type === "status") return;
+    if (message.type === "cancelUnlock") {
+      await chrome.storage.local.set({ unlockRequest: null });
+      return;
+    }
+    if (message.type === "requestUnlock") {
+      if (focusUntil <= Date.now()) throw new Error("No active focus session.");
+      const { unlockRequest = null } = await chrome.storage.local.get("unlockRequest");
+      if (unlockRequest) throw new Error("An unlock request is already pending.");
+      const reason = String(message.reason || "").trim();
+      if (reason.length < 10 || reason.length > 500) throw new Error("Write a reason between 10 and 500 characters.");
+      await chrome.storage.local.set({ unlockRequest: { reason, readyAt: Date.now() + 60000, focusUntil } });
+      return;
+    }
+    if (message.type === "confirmUnlock") {
+      const { unlockRequest = null } = await chrome.storage.local.get("unlockRequest");
+      if (!unlockRequest || unlockRequest.focusUntil !== focusUntil || focusUntil <= Date.now()) throw new Error("No active unlock request.");
+      if (Date.now() < unlockRequest.readyAt) throw new Error("Wait for the unlock countdown to finish.");
+      await chrome.storage.local.set({ focusUntil: 0, focusSession: null, unlockRequest: null });
+      return;
+    }
     if (message.type === "focus") {
       if (focusUntil > Date.now()) throw new Error("Your focus session is already running.");
       const minutes = Number(message.minutes);
       if (![15, 30, 60, 120].includes(minutes)) throw new Error("Choose a supported session duration.");
       const { blocked = [] } = await chrome.storage.local.get("blocked");
       if (!Domains.clean(blocked).length) throw new Error("Block at least one website first.");
-      await chrome.storage.local.set({ focusUntil: Date.now() + minutes * 60000 });
+      const started = new Date();
+      const day = [started.getFullYear(), String(started.getMonth() + 1).padStart(2, "0"), String(started.getDate()).padStart(2, "0")].join("-");
+      await chrome.storage.local.set({ focusUntil: started.getTime() + minutes * 60000, focusSession: { day, minutes }, unlockRequest: null });
       return;
     }
     if (message.type === "remove" && focusUntil > Date.now()) throw new Error("Blocked websites cannot be removed until your focus session ends.");
