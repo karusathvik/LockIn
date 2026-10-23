@@ -23,3 +23,11 @@ Chrome still allows disabling or uninstalling extensions, and changing the compu
 ## Verification
 
 Run `node --test tests/*.test.cjs`. Manual Chrome checks: block an already-open Monkeytype or Gmail tab, revisit it via Back and a new tab, restart Chrome during a session, and verify removal stays disabled until the deadline.
+
+## Personal reminders
+
+Settings lets you save a goal, one concrete next step, and an optional HTTP(S) work link. These appear on the blocked page. The work link follows existing blocks and cannot unlock a website.
+
+Import a UTF-8 text file (one phrase per line) or a JSON array of strings: up to 64 KB, 100 unique phrases, and 280 characters per phrase. Imports replace the draft; click Save reminders to apply. Leave the list blank for built-in reminders. One phrase is chosen per local day without notifications, external requests, API keys, or AI.
+
+You can add one optional PNG, JPEG, or WebP below 1 MB. The image, phrases, and goal stay in chrome.storage.local; uninstalling the extension removes this local data. Use Preview my reminder page to review the result.

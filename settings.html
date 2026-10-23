@@ -18,7 +18,16 @@
 <p>Ending early earns no progress. Websites remain blocked until you remove them.</p>
 </div></section><ul id="domains"></ul>
 
+<section aria-labelledby="motivationTitle"><h2 id="motivationTitle">Your reason to return</h2><p>Shown when a blocked website interrupts your focus. One phrase per day, with no notifications or external requests.</p>
+<form id="motivationForm">
+<label for="goal">What are you working toward?</label><input id="goal" maxlength="200" placeholder="Finish the database assignment">
+<label for="nextStep">Your next small action</label><input id="nextStep" maxlength="200" placeholder="Write the first SQL query">
+<label for="workURL">Work page (optional)</label><input id="workURL" type="url" placeholder="https://…"><p>The return link follows your normal website blocks.</p>
+<label for="phrases">Personal phrases (optional, one per line)</label><textarea id="phrases" rows="5" maxlength="64000" placeholder="Leave blank for built-in reminders"></textarea>
+<label for="importPhrases">Import phrases (.txt or .json)</label><input id="importPhrases" type="file" accept=".txt,.json,text/plain,application/json"><p>Up to 100 phrases, 280 characters each. JSON format: ["Keep going", "Take the next small step"]. Import replaces the draft list; Save applies it.</p>
+<label for="personalImage">Personal image (optional)</label><input id="personalImage" type="file" accept="image/png,image/jpeg,image/webp"><p>PNG, JPEG, or WebP under 1 MB. Stored locally.</p><p id="imageStatus"></p><button id="removeImage" type="button">Remove image</button><button>Save reminders</button>
+</form><p id="motivationStatus" role="status"></p><a href="blocked.html" target="_blank">Preview my reminder page</a></section>
 </main>
-<script src="domains.js"></script><script src="settings.js"></script>
+<script src="motivation.js"></script><script src="motivation-settings.js"></script><script src="domains.js"></script><script src="settings.js"></script>
 </body>
 </html>
