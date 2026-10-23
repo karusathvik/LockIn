@@ -7,9 +7,15 @@
 <p>Domains include all subdomains. Paste a full URL or a domain, such as monkeytype.com, mail.google.com, or outlook.live.com.</p>
 <form id="addForm"><label for="domain">Website</label><input id="domain" required placeholder="monkeytype.com"><button>Add website</button></form>
 <p id="status" role="status"></p>
-<section><h2>Focus session</h2><p>During a session you can add websites, but cannot remove blocks. Sessions continue across browser restarts. Blocks remain after the timer ends until you remove them.</p>
+<section><h2>Focus session</h2><p>During a session you can add websites, but cannot remove blocks. To end early, write a reason, wait 60 seconds, and confirm. Sessions continue across browser restarts. Blocks remain after the timer ends until you remove them.</p>
 <form id="focusForm"><label for="minutes">Duration</label><select id="minutes"><option value="15">15 minutes</option><option value="30" selected>30 minutes</option><option value="60">60 minutes</option><option value="120">120 minutes</option></select><button id="startFocus">Start focus session</button></form>
-<p id="focusStatus" role="status"></p></section><ul id="domains"></ul>
+<p id="focusStatus" role="status"></p>
+<div id="unlockPanel" hidden>
+<form id="unlockForm"><label for="reason">Why do you need to end early?</label><input id="reason" minlength="10" maxlength="500" required placeholder="Write a reason (at least 10 characters)"><button id="requestUnlock">Request early end</button></form>
+<p id="unlockStatus" role="status"></p><button id="confirmUnlock" hidden>End session early</button><button id="cancelUnlock" hidden>Keep focusing</button>
+<p>Ending early earns no progress. Websites remain blocked until you remove them.</p>
+</div></section><ul id="domains"></ul>
+<section aria-labelledby="progressTitle"><h2 id="progressTitle">Your focus activity</h2><p id="progressSummary"></p><div class="heatmap-scroll"><div id="heatmap" class="heatmap" role="list" aria-label="Focus activity for the past 364 days"></div></div><p class="legend">Less <span data-level="0"></span><span data-level="1"></span><span data-level="2"></span><span data-level="3"></span><span data-level="4"></span> More</p><p>Completed sessions only, grouped by the local date they started. A completed timer counts even if Chrome was closed; this measures scheduled focus time, not computer activity. Data stays in this Chrome profile.</p></section>
 </main>
 <script src="domains.js"></script><script src="settings.js"></script>
 </body>
