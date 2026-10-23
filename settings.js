@@ -15,23 +15,6 @@ function renderDomains(domains) {
     });
   }
   
-  function renderKeywords(keywords) {
-    const list = document.getElementById("keywordList");
-    list.innerHTML = "";
-    keywords.forEach(keyword => {
-      const li = document.createElement("li");
-      li.textContent = keyword;
-      const del = document.createElement("button");
-      del.textContent = "Remove";
-      del.onclick = () => {
-        const updated = keywords.filter(k => k !== keyword);
-        chrome.storage.local.set({ keywords: updated });
-      };
-      li.appendChild(del);
-      list.appendChild(li);
-    });
-  }
-  
   function renderAllowed(allowed) {
     const list = document.getElementById("allowList");
     list.innerHTML = "";
@@ -72,28 +55,6 @@ function renderDomains(domains) {
       }
     };
   
-    const keywordInput = document.getElementById("keywordInput");
-    const addKeywordBtn = document.getElementById("addKeyword");
-  
-    chrome.storage.local.get(["keywords"], (result) => {
-      const keywords = result.keywords || [];
-      renderKeywords(keywords);
-    });
-  
-    addKeywordBtn.onclick = () => {
-      const keyword = keywordInput.value.trim().toLowerCase();
-      if (keyword) {
-        chrome.storage.local.get(["keywords"], (result) => {
-          const keywords = result.keywords || [];
-          if (!keywords.includes(keyword)) {
-            keywords.push(keyword);
-            chrome.storage.local.set({ keywords });
-            keywordInput.value = "";
-          }
-        });
-      }
-    };
-  
     const allowInput = document.getElementById("allowInput");
     const addAllowBtn = document.getElementById("addAllow");
   
@@ -119,7 +80,6 @@ function renderDomains(domains) {
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area === "local") {
         if (changes.blocked) renderDomains(changes.blocked.newValue);
-        if (changes.keywords) renderKeywords(changes.keywords.newValue);
         if (changes.allowed) renderAllowed(changes.allowed.newValue);
       }
     });

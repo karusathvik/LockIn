@@ -2,7 +2,7 @@ function updateRules(domains, allowed) {
   const rules = domains
     .filter(domain => !allowed.some(allow => domain.endsWith(allow)))
     .map((domain, index) => ({
-      id: 1000 + index, // Use high, unique IDs
+      id: 1000 + index,
       priority: 1,
       action: {
         type: "redirect",
