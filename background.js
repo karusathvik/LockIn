@@ -61,7 +61,7 @@ queueRefresh();
 
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   if (sender.id !== chrome.runtime.id || !sender.url?.startsWith(chrome.runtime.getURL(""))) return;
-  if (!["add", "remove", "focus", "status", "requestUnlock", "cancelUnlock", "confirmUnlock"].includes(message.type)) return;
+  if (!["add", "remove", "focus", "status", "requestUnlock", "cancelUnlock", "confirmUnlock", "requestRemoval", "cancelRemoval", "confirmRemoval"].includes(message.type)) return;
   pending = pending.catch(() => {}).then(async () => {
     await settleSession();
     const { focusUntil = 0 } = await chrome.storage.local.get("focusUntil");
@@ -94,15 +94,40 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       if (!Domains.effective(blocked).length) throw new Error("Block at least one website first.");
       const started = new Date();
       const day = [started.getFullYear(), String(started.getMonth() + 1).padStart(2, "0"), String(started.getDate()).padStart(2, "0")].join("-");
-      await chrome.storage.local.set({ focusUntil: started.getTime() + minutes * 60000, focusSession: { day, minutes }, unlockRequest: null });
+      await chrome.storage.local.set({ focusUntil: started.getTime() + minutes * 60000, focusSession: { day, minutes }, unlockRequest: null, removalRequests: {} });
       return;
     }
-    if (message.type === "remove" && focusUntil > Date.now()) throw new Error("Blocked websites cannot be removed until your focus session ends.");
+    if (["remove", "requestRemoval", "confirmRemoval"].includes(message.type) && focusUntil > Date.now()) throw new Error("Blocked websites cannot be removed until your focus session ends.");
     const domain = Domains.normalizeDomain(message.domain);
     if (Domains.isPermanent(domain)) throw new Error("This website is permanently blocked. Permanent blocks cannot be changed or unlocked in LockIn.");
-    const { blocked = [] } = await chrome.storage.local.get("blocked");
+    const { blocked = [], removalRequests = {} } = await chrome.storage.local.get(["blocked", "removalRequests"]);
+    if (message.type === "remove") throw new Error("Pause before removing a website: write a reason, wait 30 seconds, then confirm in settings.");
+    if (message.type === "cancelRemoval") {
+      delete removalRequests[domain];
+      await chrome.storage.local.set({ removalRequests });
+      return;
+    }
+    if (message.type === "requestRemoval") {
+      if (!Domains.clean(blocked).includes(domain)) throw new Error("This website is not on your additional block list.");
+      const existing = removalRequests[domain];
+      if (existing && Date.now() <= existing.expiresAt) throw new Error("A removal request is already pending for this website.");
+      const reason = String(message.reason || "").trim();
+      if (reason.length < 30 || reason.length > 500) throw new Error("Write a reason between 30 and 500 characters.");
+      removalRequests[domain] = { reason, readyAt: Date.now() + 30000, expiresAt: Date.now() + 330000 };
+      await chrome.storage.local.set({ removalRequests });
+      return;
+    }
+    if (message.type === "confirmRemoval") {
+      const request = removalRequests[domain];
+      if (!request) throw new Error("Request removal and complete the pause first.");
+      if (Date.now() < request.readyAt) throw new Error("Wait for the 30-second pause to finish.");
+      if (Date.now() > request.expiresAt) throw new Error("This removal request expired. Start a fresh pause.");
+      if (!Domains.clean(blocked).includes(domain)) throw new Error("This website is no longer on your additional block list.");
+    }
+    delete removalRequests[domain];
     await chrome.storage.local.set({
-      blocked: message.type === "add" ? Domains.clean([...blocked, domain]) : Domains.clean(blocked).filter(item => item !== domain)
+      blocked: message.type === "add" ? Domains.clean([...blocked, domain]) : Domains.clean(blocked).filter(item => item !== domain),
+      removalRequests
     });
     await refreshRules();
   });

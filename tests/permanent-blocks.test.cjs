@@ -27,7 +27,13 @@ function setup(initial = {}, tabs = [{ id: 1, url: "https://monkeytype.com/" }, 
   vm.runInContext(fs.readFileSync("background.js", "utf8"), context);
   const idle = () => vm.runInContext("pending", context);
   const send = message => new Promise(resolve => listeners.message(message, { id: "test", url: "chrome-extension://test/settings.html" }, resolve));
-  return { context, data, listeners, redirects, idle, send, rules: () => rules };
+  const remove = async domain => {
+    const requested = await send({ type: "requestRemoval", domain, reason: "I need this website for a specific work task." });
+    if (requested.error) return requested;
+    vm.runInContext(`Date.now = () => ${data.removalRequests[domain].readyAt + 1}`, context);
+    return send({ type: "confirmRemoval", domain });
+  };
+  return { context, data, listeners, redirects, idle, send, remove, rules: () => rules };
 }
 const expectedPermanent = ["instagram.com", "linkedin.com", "facebook.com", "reddit.com", "x.com", "twitter.com", "quora.com", "ebay.com", "tcgplayer.com", "pricecharting.com", "getcollectr.com"].sort();
 
@@ -47,7 +53,7 @@ test("permanent sites and subdomains cannot be removed through messages", async 
   for (const domain of ["instagram.com", "www.instagram.com", "m.facebook.com", "linkedin.com", "https://www.linkedin.com/jobs/"]) {
     assert.match((await app.send({ type: "remove", domain })).error, /permanently blocked/);
   }
-  assert.equal((await app.send({ type: "remove", domain: "mail.google.com" })).ok, true);
+  assert.equal((await app.remove("mail.google.com")).ok, true);
   assert.equal(app.rules().length, expectedPermanent.length);
 });
 test("open tabs and client-side navigation are redirected only on matching host boundaries", async () => {
@@ -71,7 +77,7 @@ test("early unlock and natural session completion never remove permanent rules",
   await app.send({ type: "requestUnlock", reason: "x".repeat(100) });
   vm.runInContext(`Date.now = () => ${app.data.unlockRequest.readyAt + 1}`, app.context);
   assert.equal((await app.send({ type: "confirmUnlock" })).ok, true);
-  assert.equal((await app.send({ type: "remove", domain: "monkeytype.com" })).ok, true);
+  assert.equal((await app.remove("monkeytype.com")).ok, true);
   assert.match((await app.send({ type: "remove", domain: "instagram.com" })).error, /permanently blocked/);
   assert.equal(app.rules().length, expectedPermanent.length);
   await app.send({ type: "focus", minutes: 15 });

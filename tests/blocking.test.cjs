@@ -27,7 +27,13 @@ function setup(initial = {}) {
   vm.runInContext(fs.readFileSync("background.js", "utf8"), context);
   const idle = () => vm.runInContext("pending", context);
   const send = message => new Promise(resolve => listeners.message(message, { id: "test", url: "chrome-extension://test/settings.html" }, resolve));
-  return { context, data, listeners, redirects, idle, send, rules: () => rules };
+  const remove = async domain => {
+    const requested = await send({ type: "requestRemoval", domain, reason: "I need this website for a specific work task." });
+    if (requested.error) return requested;
+    vm.runInContext(`Date.now = () => ${data.removalRequests[domain].readyAt + 1}`, context);
+    return send({ type: "confirmRemoval", domain });
+  };
+  return { context, data, listeners, redirects, idle, send, remove, rules: () => rules };
 }
 test("normalize pasted URLs and match only hostname boundaries", async () => {
   const app = setup();
@@ -67,7 +73,7 @@ test("focus sessions reject removal and cannot be shortened, but permit addition
   await restarted.idle();
   assert.match((await restarted.send({ type: "remove", domain: "mail.google.com" })).error, /cannot be removed/);
   restarted.data.focusUntil = Date.now() - 1;
-  assert.equal((await restarted.send({ type: "remove", domain: "mail.google.com" })).ok, true);
+  assert.equal((await restarted.remove("mail.google.com")).ok, true);
   assert.equal(restarted.data.blocked.includes("monkeytype.com"), true);
 });
 test("concurrent adds are serialized and invalid durations rejected", async () => {

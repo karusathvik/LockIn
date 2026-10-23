@@ -47,3 +47,7 @@ Version 1.4 permanently blocks `instagram.com`, `linkedin.com`, and `facebook.co
 You can still add other websites at any time. Permanent blocks appear separately with no remove controls. Chrome still allows disabling or uninstalling extensions, and someone with filesystem access can edit extension code. This is an extension-level commitment, not an operating-system restriction.
 
 Version 1.4.1 extends the same fixed blocks to Reddit (`reddit.com`), X (`x.com` and `twitter.com`), Quora (`quora.com`), eBay (`ebay.com`), TCGplayer (`tcgplayer.com`), PriceCharting (`pricecharting.com`), and Collectr (`getcollectr.com`, including `app.getcollectr.com`). These are browser website blocks; they do not block native mobile apps or other country-specific eBay domains.
+
+## A pause before removing blocks
+
+Normal website removals require a reason (30–500 trimmed characters), a 30-second pause, and a separate confirmation. Sites stay blocked until confirmation; Keep blocked cancels the request. Requests survive worker/browser restarts and expire five minutes after the wait ends. Starting a focus session clears pending removal requests, and active sessions disallow removals. Permanent blocks cannot use this flow. Reasons stay in local browser storage and are cleared when cancelled, confirmed, or when a focus session starts.

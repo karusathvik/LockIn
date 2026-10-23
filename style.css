@@ -141,3 +141,8 @@ body.popup { background: linear-gradient(90deg, #0b0e1df5, #111023ce), url("asse
 .permanent-badge { border: 1px solid #695188; padding: 6px 9px; border-radius: 4px; color: #ddc2ff; font-size: 9px; letter-spacing: .08em; background: #b083e410; white-space: nowrap; }
 .permanent-note { font-size: 12px; }
 @media (max-width: 420px) { .permanent-card li { align-items: start; flex-direction: column; gap: 8px; } }
+
+#removalPanel { margin-top: 20px; padding: 18px; border: 1px solid #695188; border-radius: 8px; background: #141125; }
+#removalReason { width: 100%; }
+#removalStatus, #removalTitle { overflow-wrap: anywhere; }
+#cancelRemoval { background: transparent; color: #dfd4fa; margin-left: 6px; }

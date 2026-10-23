@@ -12,10 +12,11 @@ async function send(message) {
 
 let progressSignature = "";
 let domainsSignature = "";
+let removalDomain = "";
 
 async function render() {
   await send({ type: "status" });
-  const { blocked = [], focusUntil = 0, unlockRequest = null, progress = {}, focusSession = null } = await chrome.storage.local.get(["blocked", "focusUntil", "unlockRequest", "progress", "focusSession"]);
+  const { blocked = [], focusUntil = 0, unlockRequest = null, progress = {}, focusSession = null, removalRequests = {} } = await chrome.storage.local.get(["blocked", "focusUntil", "unlockRequest", "progress", "focusSession", "removalRequests"]);
   const locked = focusUntil > Date.now();
   document.getElementById("startFocus").disabled = locked;
   const remaining = Math.max(0, Math.ceil((focusUntil - Date.now()) / 1000));
@@ -35,6 +36,7 @@ async function render() {
     renderProgress(progress);
     progressSignature = nextProgressSignature;
   }
+  renderRemoval(removalRequests, locked, blocked);
   const nextDomainsSignature = JSON.stringify([Domains.clean(blocked), locked]);
   if (nextDomainsSignature === domainsSignature) return;
   domainsSignature = nextDomainsSignature;
@@ -48,12 +50,28 @@ async function render() {
     remove.textContent = "Remove";
     remove.disabled = locked;
     remove.onclick = async () => {
-      try { await send({ type: "remove", domain }); } catch (error) { document.getElementById("status").textContent = error.message; }
+      removalDomain = domain;
+      document.getElementById("removalReason").value = "";
+      try { await render(); document.getElementById("removalPanel").scrollIntoView({ block: "nearest" }); }
+      catch (error) { document.getElementById("status").textContent = error.message; }
     };
     item.append(name, remove);
     list.append(item);
   }
 }
+function renderRemoval(requests, locked, blocked) {
+  const panel = document.getElementById("removalPanel");
+  panel.hidden = !removalDomain || locked || !Domains.clean(blocked).includes(removalDomain);
+  document.getElementById("removalTitle").textContent = "Pause before removing " + removalDomain;
+  const request = requests[removalDomain];
+  const active = request && Date.now() <= request.expiresAt;
+  const seconds = active ? Math.max(0, Math.ceil((request.readyAt - Date.now()) / 1000)) : 0;
+  document.getElementById("removalForm").hidden = Boolean(active);
+  document.getElementById("confirmRemoval").hidden = !active;
+  document.getElementById("confirmRemoval").disabled = seconds > 0 || locked;
+  document.getElementById("removalStatus").textContent = active ? `${request.reason} — ${seconds ? `Wait ${seconds}s. The website stays blocked.` : "Pause complete. Confirm within five minutes, or keep the block."}` : request ? "Request expired. Start a fresh pause if you still need access." : "";
+}
+
 function renderProgress(progress) {
   const totals = Object.values(progress).reduce((sum, day) => ({ sessions: sum.sessions + day.sessions, minutes: sum.minutes + day.minutes }), { sessions: 0, minutes: 0 });
   const summary = document.getElementById("progressSummary");
@@ -97,6 +115,19 @@ document.addEventListener("DOMContentLoaded", () => {
     item.append(name, badge);
     permanentList.append(item);
   }
+  document.getElementById("removalForm").onsubmit = async event => {
+    event.preventDefault();
+    try { await send({ type: "requestRemoval", domain: removalDomain, reason: document.getElementById("removalReason").value }); await render(); }
+    catch (error) { document.getElementById("status").textContent = error.message; }
+  };
+  document.getElementById("confirmRemoval").onclick = async () => {
+    try { await send({ type: "confirmRemoval", domain: removalDomain }); removalDomain = ""; await render(); }
+    catch (error) { document.getElementById("status").textContent = error.message; }
+  };
+  document.getElementById("cancelRemoval").onclick = async () => {
+    try { await send({ type: "cancelRemoval", domain: removalDomain }); removalDomain = ""; await render(); }
+    catch (error) { document.getElementById("status").textContent = error.message; }
+  };
   const reason = document.getElementById("reason");
   const updateReasonCount = () => {
     const length = reason.value.trim().length;
