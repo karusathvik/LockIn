@@ -80,7 +80,9 @@ test("early unlocking requires a reason, a persisted wait, and explicit confirma
   await app.idle();
   await app.send({ type: "focus", minutes: 30 });
   assert.match((await app.send({ type: "requestUnlock", reason: "short" })).error, /reason/);
-  assert.equal((await app.send({ type: "requestUnlock", reason: "I need to finish an urgent task" })).ok, true);
+  assert.equal((await app.send({ type: "requestUnlock", reason: "x".repeat(100) })).ok, true);
+  assert.equal((await app.send({ type: "add", domain: "mail.google.com" })).ok, true);
+  assert.match((await app.send({ type: "remove", domain: "mail.google.com" })).error, /cannot be removed/);
   const readyAt = app.data.unlockRequest.readyAt;
   assert.match((await app.send({ type: "requestUnlock", reason: "A second reason to reset the timer" })).error, /already pending/);
   assert.equal(app.data.unlockRequest.readyAt, readyAt);
@@ -92,13 +94,13 @@ test("early unlocking requires a reason, a persisted wait, and explicit confirma
   assert.equal(restarted.data.focusUntil, 0);
   assert.equal(restarted.data.focusSession, null);
   assert.equal(restarted.data.progress, undefined);
-  assert.deepEqual(restarted.data.blocked, ["monkeytype.com"]);
+  assert.deepEqual(Array.from(restarted.data.blocked).sort(), ["mail.google.com", "monkeytype.com"]);
 });
 test("cancelled unlock requests cannot end a session", async () => {
   const app = setup({ blocked: ["monkeytype.com"] });
   await app.idle();
   await app.send({ type: "focus", minutes: 15 });
-  await app.send({ type: "requestUnlock", reason: "I would like a break now" });
+  await app.send({ type: "requestUnlock", reason: "x".repeat(100) });
   await app.send({ type: "cancelUnlock" });
   assert.equal(app.data.unlockRequest, null);
   assert.match((await app.send({ type: "confirmUnlock" })).error, /No active/);
@@ -121,4 +123,15 @@ test("completed sessions are credited once across restart and concurrent status 
   const offline = setup({ blocked: ["monkeytype.com"], focusUntil: Date.now() - 1, focusSession: { day, minutes: 30 } });
   await offline.idle();
   assert.equal(offline.data.progress[day].minutes, 30);
+});
+
+test("unlock reasons require 100 trimmed characters and permit at most 500", async () => {
+  const app = setup({ blocked: ["monkeytype.com"] });
+  await app.idle();
+  await app.send({ type: "focus", minutes: 15 });
+  for (const reason of ["x".repeat(99), " " + "x".repeat(99) + " ", "x".repeat(501)]) {
+    assert.match((await app.send({ type: "requestUnlock", reason })).error, /100 and 500/);
+    assert.equal(app.data.unlockRequest, null);
+  }
+  assert.equal((await app.send({ type: "requestUnlock", reason: "x".repeat(500) })).ok, true);
 });

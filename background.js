@@ -75,7 +75,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       const { unlockRequest = null } = await chrome.storage.local.get("unlockRequest");
       if (unlockRequest) throw new Error("An unlock request is already pending.");
       const reason = String(message.reason || "").trim();
-      if (reason.length < 10 || reason.length > 500) throw new Error("Write a reason between 10 and 500 characters.");
+      if (reason.length < 100 || reason.length > 500) throw new Error("Write a reason between 100 and 500 characters.");
       await chrome.storage.local.set({ unlockRequest: { reason, readyAt: Date.now() + 60000, focusUntil } });
       return;
     }

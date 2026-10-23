@@ -62,6 +62,14 @@ function renderProgress(progress) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  const reason = document.getElementById("reason");
+  const updateReasonCount = () => {
+    const length = reason.value.trim().length;
+    document.getElementById("reasonCount").textContent = `${length} / 100 characters minimum (500 maximum)`;
+    document.getElementById("requestUnlock").disabled = length < 100;
+  };
+  reason.addEventListener("input", updateReasonCount);
+  updateReasonCount();
   document.getElementById("unlockForm").onsubmit = async event => {
     event.preventDefault();
     try { await send({ type: "requestUnlock", reason: document.getElementById("reason").value }); await render(); }
