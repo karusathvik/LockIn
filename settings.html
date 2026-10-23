@@ -1,24 +1,25 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><title>Locked In Settings</title><link rel="stylesheet" href="style.css"></head>
-<body>
+<body class="dashboard">
 <main>
-<section aria-labelledby="progressTitle"><h1 id="progressTitle">Your focus activity</h1><p id="progressSummary"></p><div class="heatmap-scroll"><div id="heatmap" class="heatmap" role="list" aria-label="Focus activity for the past 364 days"></div></div><p class="legend">Less <span data-level="0"></span><span data-level="1"></span><span data-level="2"></span><span data-level="3"></span><span data-level="4"></span> More</p><p>Completed sessions only, grouped by the local date they started. A completed timer counts even if Chrome was closed; this measures scheduled focus time, not computer activity. Data stays in this Chrome profile.</p></section>
-<h2>Blocked websites</h2>
+<header class="masthead"><a class="brand" href="settings.html">LOCKED IN<span>FOCUS DOJO</span></a><span class="local-badge">LOCAL ONLY · NO AI</span></header>
+<section class="activity-card" aria-labelledby="progressTitle"><p class="eyebrow">YOUR TRAINING ARC</p><h1 id="progressTitle">Small steps.<br>Unstoppable momentum.</h1><p class="section-caption">Every completed session leaves a mark.</p><div id="progressSummary" class="stats"></div><div class="heatmap-scroll"><div id="heatmap" class="heatmap" role="list" aria-label="Focus activity for the past 364 days"></div></div><p class="legend">Less <span data-level="0"></span><span data-level="1"></span><span data-level="2"></span><span data-level="3"></span><span data-level="4"></span> More</p><p>Completed sessions only, grouped by the local date they started. A completed timer counts even if Chrome was closed; this measures scheduled focus time, not computer activity. Data stays in this Chrome profile.</p></section>
+<div class="control-grid"><section class="block-card"><p class="eyebrow">01 / PROTECT YOUR ATTENTION</p><h2>Seal the distractions.</h2>
 <p>Domains include all subdomains. Paste a full URL or a domain, such as monkeytype.com, mail.google.com, or outlook.live.com.</p>
 <form id="addForm"><label for="domain">Website</label><input id="domain" required placeholder="monkeytype.com"><button>Add website</button></form>
 <p>You can always add websites, including during a focus session or unlock countdown. Removing websites is locked during an active session.</p>
-<p id="status" role="status"></p>
-<section><h2>Focus session</h2><p>During a session you can add websites, but cannot remove blocks. To end early, write a reason, wait 60 seconds, and confirm. Sessions continue across browser restarts. Blocks remain after the timer ends until you remove them.</p>
+<p id="status" role="status"></p><ul id="domains"></ul></section>
+<section class="session-card"><p class="eyebrow">02 / ENTER FOCUS</p><h2>Begin your next arc.</h2><p>During a session you can add websites, but cannot remove blocks. To end early, write a reason, wait 60 seconds, and confirm. Sessions continue across browser restarts. Blocks remain after the timer ends until you remove them.</p>
 <form id="focusForm"><label for="minutes">Duration</label><select id="minutes"><option value="15">15 minutes</option><option value="30" selected>30 minutes</option><option value="60">60 minutes</option><option value="120">120 minutes</option></select><button id="startFocus">Start focus session</button></form>
-<p id="focusStatus" role="status"></p>
+<p id="focusStatus" class="timer" role="status"></p><progress id="sessionProgress" max="100" value="0" aria-label="Focus session progress" hidden></progress>
 <div id="unlockPanel" hidden>
 <form id="unlockForm"><label for="reason">Why do you need to end early?</label><textarea id="reason" minlength="100" maxlength="500" required rows="4" aria-describedby="reasonCount" placeholder="Explain why ending this session is necessary (at least 100 characters)"></textarea><p id="reasonCount">0 / 100 characters minimum</p><button id="requestUnlock">Request early end</button></form>
 <p id="unlockStatus" role="status"></p><button id="confirmUnlock" hidden>End session early</button><button id="cancelUnlock" hidden>Keep focusing</button>
 <p>Ending early earns no progress. Websites remain blocked until you remove them.</p>
-</div></section><ul id="domains"></ul>
+</div></section></div>
 
-<section aria-labelledby="motivationTitle"><h2 id="motivationTitle">Your reason to return</h2><p>Shown when a blocked website interrupts your focus. One phrase per day, with no notifications or external requests.</p>
+<section aria-labelledby="motivationTitle"><p class="eyebrow">03 / REMEMBER YOUR WHY</p><h2 id="motivationTitle">Your reason to return.</h2><p>Shown when a blocked website interrupts your focus. One phrase per day, with no notifications or external requests.</p>
 <form id="motivationForm">
 <label for="goal">What are you working toward?</label><input id="goal" maxlength="200" placeholder="Finish the database assignment">
 <label for="nextStep">Your next small action</label><input id="nextStep" maxlength="200" placeholder="Write the first SQL query">

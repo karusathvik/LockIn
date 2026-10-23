@@ -10,12 +10,19 @@ async function send(message) {
   if (response?.error) throw new Error(response.error);
 }
 
+let progressSignature = "";
+let domainsSignature = "";
+
 async function render() {
   await send({ type: "status" });
-  const { blocked = [], focusUntil = 0, unlockRequest = null, progress = {} } = await chrome.storage.local.get(["blocked", "focusUntil", "unlockRequest", "progress"]);
+  const { blocked = [], focusUntil = 0, unlockRequest = null, progress = {}, focusSession = null } = await chrome.storage.local.get(["blocked", "focusUntil", "unlockRequest", "progress", "focusSession"]);
   const locked = focusUntil > Date.now();
   document.getElementById("startFocus").disabled = locked;
-  document.getElementById("focusStatus").textContent = locked ? "Locked until " + new Date(focusUntil).toLocaleTimeString() : "No active focus session.";
+  const remaining = Math.max(0, Math.ceil((focusUntil - Date.now()) / 1000));
+  document.getElementById("focusStatus").textContent = locked ? `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")} remaining` : "Ready when you are.";
+  const meter = document.getElementById("sessionProgress");
+  meter.hidden = !locked || !focusSession;
+  meter.value = focusSession ? Math.min(100, Math.max(0, 100 * (1 - remaining / (focusSession.minutes * 60)))) : 0;
   document.getElementById("unlockPanel").hidden = !locked;
   document.getElementById("unlockForm").hidden = Boolean(unlockRequest);
   const seconds = unlockRequest ? Math.max(0, Math.ceil((unlockRequest.readyAt - Date.now()) / 1000)) : 0;
@@ -23,7 +30,14 @@ async function render() {
   document.getElementById("confirmUnlock").hidden = !unlockRequest;
   document.getElementById("confirmUnlock").disabled = seconds > 0;
   document.getElementById("cancelUnlock").hidden = !unlockRequest;
-  renderProgress(progress);
+  const nextProgressSignature = JSON.stringify([progress, new Date().toDateString()]);
+  if (nextProgressSignature !== progressSignature) {
+    renderProgress(progress);
+    progressSignature = nextProgressSignature;
+  }
+  const nextDomainsSignature = JSON.stringify([Domains.clean(blocked), locked]);
+  if (nextDomainsSignature === domainsSignature) return;
+  domainsSignature = nextDomainsSignature;
   const list = document.getElementById("domains");
   list.replaceChildren();
   for (const domain of Domains.clean(blocked)) {
@@ -42,7 +56,17 @@ async function render() {
 }
 function renderProgress(progress) {
   const totals = Object.values(progress).reduce((sum, day) => ({ sessions: sum.sessions + day.sessions, minutes: sum.minutes + day.minutes }), { sessions: 0, minutes: 0 });
-  document.getElementById("progressSummary").textContent = `${totals.sessions} completed sessions · ${totals.minutes} focus minutes · ${Object.keys(progress).length} active days (all time)`;
+  const summary = document.getElementById("progressSummary");
+  summary.replaceChildren();
+  for (const [value, label] of [[totals.sessions, "SESSIONS COMPLETED"], [totals.minutes, "FOCUS MINUTES"], [Object.keys(progress).length, "ACTIVE DAYS"]]) {
+    const card = document.createElement("div");
+    const number = document.createElement("strong");
+    number.textContent = value;
+    const caption = document.createElement("span");
+    caption.textContent = label;
+    card.append(number, caption);
+    summary.append(card);
+  }
   const grid = document.getElementById("heatmap");
   const cells = [];
   for (let offset = 363; offset >= 0; offset--) {
@@ -97,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("status").textContent = "Focus session started.";
     } catch (error) { document.getElementById("status").textContent = error.message; }
   };
-  render().catch(console.error);
-  setInterval(() => render().catch(console.error), 1000);
+  render().catch(error => { document.getElementById("status").textContent = error.message; });
+  setInterval(() => render().catch(error => { document.getElementById("status").textContent = error.message; }), 1000);
 });
-chrome.storage.onChanged.addListener(() => render().catch(console.error));
+chrome.storage.onChanged.addListener(() => render().catch(error => { document.getElementById("status").textContent = error.message; }));
