@@ -3,14 +3,14 @@
 <head><meta charset="utf-8"><title>Locked In Settings</title><link rel="stylesheet" href="style.css"></head>
 <body class="dashboard">
 <main>
-<header class="masthead"><a class="brand" href="settings.html">LOCKED IN<span>FOCUS DOJO</span></a><span class="local-badge">LOCAL ONLY · NO AI</span></header>
-<section class="activity-card" aria-labelledby="progressTitle"><p class="eyebrow">YOUR TRAINING ARC</p><h1 id="progressTitle">Small steps.<br>Unstoppable momentum.</h1><p class="section-caption">Every completed session leaves a mark.</p><div id="progressSummary" class="stats"></div><div class="heatmap-scroll"><div id="heatmap" class="heatmap" role="list" aria-label="Focus activity for the past 364 days"></div></div><p class="legend">Less <span data-level="0"></span><span data-level="1"></span><span data-level="2"></span><span data-level="3"></span><span data-level="4"></span> More</p><p>Completed sessions only, grouped by the local date they started. A completed timer counts even if Chrome was closed; this measures scheduled focus time, not computer activity. Data stays in this Chrome profile.</p></section>
-<div class="control-grid"><section class="block-card"><p class="eyebrow">01 / PROTECT YOUR ATTENTION</p><h2>Seal the distractions.</h2>
+<header class="masthead"><a class="brand" href="settings.html">LOCKED IN<span>SHADOW FOCUS</span></a><span class="local-badge">OFFLINE · PRIVATE</span></header>
+<section class="activity-card" aria-labelledby="progressTitle"><div class="hero-scene"><img class="hunter-art" src="assets/shadow-hunter.png" alt="" aria-hidden="true"><div class="hero-copy"><p class="eyebrow">SYSTEM / DAILY QUEST</p><h1 id="progressTitle">Rise above<br>the distractions.</h1><p class="section-caption">Your next level begins with one focused session.</p><span class="quest-tag">MAIN QUEST: KEEP SHOWING UP</span></div></div><div class="system-heading"><span>TRAINING RECORD</span><span>PAST 364 DAYS</span></div><div id="progressSummary" class="stats"></div><div class="heatmap-scroll"><div id="heatmap" class="heatmap" role="list" aria-label="Focus activity for the past 364 days"></div></div><p class="legend">Less <span data-level="0"></span><span data-level="1"></span><span data-level="2"></span><span data-level="3"></span><span data-level="4"></span> More</p><p>Completed sessions only, grouped by the local date they started. A completed timer counts even if Chrome was closed; this measures scheduled focus time, not computer activity. Data stays in this Chrome profile.</p></section>
+<div class="control-grid"><section class="block-card"><p class="eyebrow">01 / DEFENSE BARRIER</p><h2>Keep distractions sealed.</h2>
 <p>Domains include all subdomains. Paste a full URL or a domain, such as monkeytype.com, mail.google.com, or outlook.live.com.</p>
 <form id="addForm"><label for="domain">Website</label><input id="domain" required placeholder="monkeytype.com"><button>Add website</button></form>
 <p>You can always add websites, including during a focus session or unlock countdown. Removing websites is locked during an active session.</p>
 <p id="status" role="status"></p><ul id="domains"></ul></section>
-<section class="session-card"><p class="eyebrow">02 / ENTER FOCUS</p><h2>Begin your next arc.</h2><p>During a session you can add websites, but cannot remove blocks. To end early, write a reason, wait 60 seconds, and confirm. Sessions continue across browser restarts. Blocks remain after the timer ends until you remove them.</p>
+<section class="session-card"><p class="eyebrow">02 / INSTANCE GATE</p><h2>Enter your focus gate.</h2><p>During a session you can add websites, but cannot remove blocks. To end early, write a reason, wait 60 seconds, and confirm. Sessions continue across browser restarts. Blocks remain after the timer ends until you remove them.</p>
 <form id="focusForm"><label for="minutes">Duration</label><select id="minutes"><option value="15">15 minutes</option><option value="30" selected>30 minutes</option><option value="60">60 minutes</option><option value="120">120 minutes</option></select><button id="startFocus">Start focus session</button></form>
 <p id="focusStatus" class="timer" role="status"></p><progress id="sessionProgress" max="100" value="0" aria-label="Focus session progress" hidden></progress>
 <div id="unlockPanel" hidden>
@@ -19,7 +19,7 @@
 <p>Ending early earns no progress. Websites remain blocked until you remove them.</p>
 </div></section></div>
 
-<section aria-labelledby="motivationTitle"><p class="eyebrow">03 / REMEMBER YOUR WHY</p><h2 id="motivationTitle">Your reason to return.</h2><p>Shown when a blocked website interrupts your focus. One phrase per day, with no notifications or external requests.</p>
+<section aria-labelledby="motivationTitle"><p class="eyebrow">03 / YOUR MAIN QUEST</p><h2 id="motivationTitle">Your reason to return.</h2><p>Shown when a blocked website interrupts your focus. One phrase per day, with no notifications or external requests.</p>
 <form id="motivationForm">
 <label for="goal">What are you working toward?</label><input id="goal" maxlength="200" placeholder="Finish the database assignment">
 <label for="nextStep">Your next small action</label><input id="nextStep" maxlength="200" placeholder="Write the first SQL query">

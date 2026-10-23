@@ -32,8 +32,10 @@ Import a UTF-8 text file (one phrase per line) or a JSON array of strings: up to
 
 You can add one optional PNG, JPEG, or WebP below 1 MB. The image, phrases, and goal stay in chrome.storage.local; uninstalling the extension removes this local data. Use Preview my reminder page to review the result.
 
-## Focus Dojo interface
+## Shadow Focus interface
 
-The dashboard, popup, and blocked page use an anime-inspired night palette with a moon-and-mountain scene, cyan activity cells, and violet accents. The dashboard keeps the heatmap first and website additions beside session controls. Active sessions show a live countdown and elapsed-time bar. No animation, remote fonts, or theme image downloads are required.
+Version 1.3 adds an original Solo Leveling-inspired shadow-hunter illustration, violet activity cells, quest labels, and hunter-system panels across the dashboard, popup, and blocked page. Artwork is bundled in `assets/shadow-hunter.png`; generation notes and the exact prompt are in `assets/README.md`. The extension makes no AI, image API, font, or theme download requests at runtime.
+
+The dashboard keeps the heatmap first and website additions beside session controls. Active sessions show a live countdown and elapsed-time bar. The theme uses static art and respects narrow layouts without animation.
 
 Import `focus-phrases.json` from this folder for an optional set of original training-arc reminders. Goal and next-step reminders are practical prompts rather than a guarantee of improved productivity; no live content API is used.
