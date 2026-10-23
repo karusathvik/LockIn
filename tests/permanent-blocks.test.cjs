@@ -29,15 +29,17 @@ function setup(initial = {}, tabs = [{ id: 1, url: "https://monkeytype.com/" }, 
   const send = message => new Promise(resolve => listeners.message(message, { id: "test", url: "chrome-extension://test/settings.html" }, resolve));
   return { context, data, listeners, redirects, idle, send, rules: () => rules };
 }
+const expectedPermanent = ["instagram.com", "linkedin.com", "facebook.com", "reddit.com", "x.com", "twitter.com", "quora.com", "ebay.com", "tcgplayer.com", "pricecharting.com", "getcollectr.com"].sort();
+
 test("permanent rules are installed without preferences and survive a restart", async () => {
   const app = setup({}, [{ id: 50, url: "https://instagram.com/" }, { id: 51, url: "https://www.linkedin.com/jobs/" }]);
   await app.idle();
   assert.deepEqual(app.redirects.map(tab => tab.id), [50, 51]);
-  assert.deepEqual(Array.from(app.rules(), rule => rule.condition.requestDomains[0]).sort(), ["facebook.com", "instagram.com", "linkedin.com"]);
+  assert.deepEqual(Array.from(app.rules(), rule => rule.condition.requestDomains[0]).sort(), expectedPermanent);
   assert.ok(app.rules().every(rule => rule.action.redirect.extensionPath === "/blocked.html"));
   const restarted = setup({ blocked: [], allowed: ["instagram.com", "facebook.com", "linkedin.com"] });
   await restarted.idle();
-  assert.equal(restarted.rules().length, 3);
+  assert.equal(restarted.rules().length, expectedPermanent.length);
 });
 test("permanent sites and subdomains cannot be removed through messages", async () => {
   const app = setup({ blocked: ["instagram.com", "mail.google.com"] });
@@ -46,7 +48,7 @@ test("permanent sites and subdomains cannot be removed through messages", async 
     assert.match((await app.send({ type: "remove", domain })).error, /permanently blocked/);
   }
   assert.equal((await app.send({ type: "remove", domain: "mail.google.com" })).ok, true);
-  assert.equal(app.rules().length, 3);
+  assert.equal(app.rules().length, expectedPermanent.length);
 });
 test("open tabs and client-side navigation are redirected only on matching host boundaries", async () => {
   const app = setup();
@@ -71,11 +73,26 @@ test("early unlock and natural session completion never remove permanent rules",
   assert.equal((await app.send({ type: "confirmUnlock" })).ok, true);
   assert.equal((await app.send({ type: "remove", domain: "monkeytype.com" })).ok, true);
   assert.match((await app.send({ type: "remove", domain: "instagram.com" })).error, /permanently blocked/);
-  assert.equal(app.rules().length, 3);
+  assert.equal(app.rules().length, expectedPermanent.length);
   await app.send({ type: "focus", minutes: 15 });
   vm.runInContext(`Date.now = () => ${app.data.focusUntil + 1}`, app.context);
   await app.send({ type: "status" });
   assert.equal(app.data.focusUntil, 0);
   assert.match((await app.send({ type: "remove", domain: "linkedin.com" })).error, /permanently blocked/);
-  assert.equal(app.rules().length, 3);
+  assert.equal(app.rules().length, expectedPermanent.length);
+});
+
+test("every added site blocks its subdomains and resists removal", async () => {
+  const app = setup();
+  await app.idle();
+  const hosts = ["old.reddit.com", "x.com", "mobile.twitter.com", "www.quora.com", "www.ebay.com", "shop.tcgplayer.com", "www.pricecharting.com", "app.getcollectr.com"];
+  for (const [index, host] of hosts.entries()) {
+    assert.match((await app.send({ type: "remove", domain: host })).error, /permanently blocked/);
+    app.listeners.history({ tabId: 100 + index, frameId: 0, url: "https://" + host + "/" });
+  }
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(app.redirects.map(tab => tab.id), hosts.map((_, index) => 100 + index));
+  for (const host of ["notreddit.com", "x.com.example.org", "notquora.com", "getcollectr.com.example.org"]) {
+    assert.equal(app.context.Domains.isPermanent(host), false);
+  }
 });

@@ -1,5 +1,5 @@
 (function (root) {
-  const permanent = Object.freeze(["instagram.com", "linkedin.com", "facebook.com"]);
+  const permanent = Object.freeze(["instagram.com", "linkedin.com", "facebook.com", "reddit.com", "x.com", "twitter.com", "quora.com", "ebay.com", "tcgplayer.com", "pricecharting.com", "getcollectr.com"]);
   function normalizeDomain(input) {
     const value = String(input || "").trim();
     const url = new URL(value.includes("://") ? value : "https://" + value);
